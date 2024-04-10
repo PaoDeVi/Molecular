@@ -116,18 +116,24 @@ void all_alignments(int i, int j, string align1, string align2,vector<pair<strin
 void star_alignment(int num_seq){
   int max_score_index = 0, max_size = -1;
   string alignments[num_seq];
-
+  cout<<"La matriz de scores entre las secuencias es: "<<endl;
   //Selecciona aquella secuencia con mejor score
   for(int i = 0; i < num_seq; i++){
      sum_score_index[i] = 0;
     for(int j = 0; j < num_seq; j++){
       if(j!=i){
-        sum_score_index[i] += needleman_wunsch(sequencias[i],sequencias[j],sequencias[i].length(),sequencias[j].length());
-    }
+        int r = needleman_wunsch(sequencias[i],sequencias[j],sequencias[i].length(),sequencias[j].length());
+        sum_score_index[i] += r;
+        cout<<r<<"  "; 
+      }
+      else{
+        cout<<"-"<<"  ";
+      }
     }
     if(i>0 && sum_score_index[i] > sum_score_index[max_score_index]){
       max_score_index = i;
     }
+    cout<<endl;
   }
   alignments[max_score_index] = sequencias[max_score_index];
   pair<string, string> optimal;
@@ -147,7 +153,7 @@ void star_alignment(int num_seq){
   }
   }
 
-  printf("El mejor score alineamiento es: %d \n",sum_score_index[max_score_index]);
+  printf("El mejor score de alineamiento es: %d \n",sum_score_index[max_score_index]);
   
   for(int i = 0; i < num_seq; i++){
     int n = alignments[i].length();
@@ -172,14 +178,14 @@ vector<string> obtenerSecuenciasADN(const string& nombreArchivo) {
     string linea;
 
     while (getline(archivo, linea)) {
-        size_t posInicio = linea.find("F: 5'-") + 6;
-        size_t posFin = linea.find("'", posInicio);
+        size_t posInicio = linea.find("F: 5′-") + 6;
+        size_t posFin = linea.find("′", posInicio);
         if (posInicio != string::npos && posFin != string::npos) {
             string secuencia = linea.substr(posInicio+2, posFin - posInicio - 4);
             if(secuencia != "  R:") secuencias.push_back(secuencia);
         }
-        posInicio = linea.find("R: 5'-") + 6;
-        posFin = linea.find("'", posInicio);
+        posInicio = linea.find("R: 5′-") + 6;
+        posFin = linea.find("′", posInicio);
         if (posInicio != string::npos && posFin != string::npos) {
             string secuencia = linea.substr(posInicio+2, posFin - posInicio - 4);
             if(secuencia != "  F:") secuencias.push_back(secuencia);
@@ -225,6 +231,39 @@ int all_sequences(vector<string> secuencias){
   return index;
 }
 
+string invertir_transformar(string secuencia){
+  string complemento="";
+  for(int i = secuencia.length()-1; i >= 0;i--){
+    if(secuencia[i]=='A'){
+      complemento+="T";
+    }
+    else if(secuencia[i]=='T'){
+        complemento+="A";
+      }
+    else if(secuencia[i]=='C'){
+      complemento+="G";
+    }
+    else if(secuencia[i]=='G'){
+      complemento+="C";
+    }
+  }
+  return complemento;
+}
+
+int all_sequences_complement(vector<string> secuencias){
+  int index = 0;
+  for (const auto& secuencia : secuencias) {
+    if(index%2==0){
+      sequencias[index] = secuencia;
+    }
+    else{
+      sequencias[index] = invertir_transformar(secuencia);
+    }  
+      index++;
+    }
+  return index;
+}
+
 int main() {
   //Ejemplo en clase
   int num_seq = 5;
@@ -240,9 +279,11 @@ int main() {
   num_seq = front_sequences(secuencias);
   //Secuencias inversas
   num_seq = reverse_sequences(secuencias);
-  //Todos contra todos
+  //Todos contra todos (Front conversion)
+  num_seq = all_sequences_complement(secuencias);
+  //Todos contra todos (Bandos)
   num_seq = all_sequences(secuencias);
-  
+  //cout<<invertir_transformar("ATTGCCATT")<<endl;
   star_alignment(num_seq);
 
   return 0;
